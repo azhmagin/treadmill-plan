@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>Treadmill Plan — Недели 1–8</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f;--card:#131320;--card2:#1a1a2e;--border:rgba(255,255,255,0.06);
+  --text:#e8e8f0;--dim:#7a7a90;--dim2:#55556a;
+  --a:#2E86AB;--ag:rgba(46,134,171,0.2);
+  --b:#A23B72;--bg2:rgba(162,59,114,0.2);
+  --c:#F18F01;--cg:rgba(241,143,1,0.2);
+  --accent:#6c5ce7;--accent2:#a29bfe;
+  --green:#1dd1a1;--red:#ee5a24;--yellow:#ffeaa7;--blue:#74b9ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;padding:0 0 100px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* TOP BAR */
+.top-bar{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:12px 16px 8px;border-bottom:1px solid var(--border)}
+.top-bar h1{font-size:20px;font-weight:800;background:linear-gradient(135deg,#e8e8f0,#a0a0c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.top-bar .sub{text-align:center;font-size:11px;color:var(--dim);margin-top:2px}
+
+/* WEEK CAROUSEL */
+.week-scroll{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.week-scroll::-webkit-scrollbar{display:none}
+.week-btn{flex-shrink:0;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .25s;white-space:nowrap;color:var(--text);user-select:none}
+.week-btn.active{background:var(--accent);border-color:var(--accent);box-shadow:0 3px 16px rgba(108,92,231,0.4)}
+.week-btn:not(.active):active{transform:scale(0.95)}
+
+/* PROGRESS BAR */
+.progress-wrap{padding:4px 16px 8px}
+.progress-bar{height:4px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease}
+.progress-label{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:3px}
+
+/* HR CEILING */
+.hr-ceil{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 16px 10px;padding:8px;border-radius:10px;background:rgba(238,90,36,0.08);border:1px solid rgba(238,90,36,0.2);font-size:11px;font-weight:600;color:var(--red)}
+
+/* WEEK STATS */
+.week-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 16px 12px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700}
+.stat-label{font-size:10px;color:var(--dim);margin-top:2px}
+.stat-delta{font-size:10px;margin-top:2px}
+.stat-delta.up{color:var(--green)}
+.stat-delta.same{color:var(--dim)}
+
+/* CONTENT */
+.week-panel{display:none;padding:0 12px}
+.week-panel.active{display:block}
+
+/* DAY CARD */
+.day-card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.day-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.day-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}
+.day-a .day-icon{background:var(--ag);color:var(--a)}
+.day-b .day-icon{background:var(--bg2);color:var(--b)}
+.day-c .day-icon{background:var(--cg);color:var(--c)}
+.day-info{flex:1}
+.day-title{font-size:14px;font-weight:700}
+.day-a .day-title{color:var(--a)}
+.day-b .day-title{color:var(--b)}
+.day-c .day-title{color:var(--c)}
+.day-sub{font-size:10px;color:var(--dim);margin-top:1px}
+.day-total{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;padding:3px 9px;border-radius:8px;background:rgba(255,255,255,0.05)}
+.chev{width:18px;font-size:10px;color:var(--dim);transition:transform .3s;flex-shrink:0}
+.day-card.open .chev{transform:rotate(180deg)}
+.day-body{padding:0 10px 12px}
+.day-card:not(.open) .day-body{display:none}
+
+/* SEGMENT */
+.seg{padding:8px 10px;border-radius:9px;margin-bottom:5px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+.seg:last-child{margin-bottom:0}
+.seg-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.seg-ph{font-size:12px;font-weight:600}
+.seg-tm{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:5px}
+.seg-m{display:flex;gap:5px;flex-wrap:wrap}
+.m{display:flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,0.04)}
+.m .l{color:var(--dim);font-weight:400}
+.m .v{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:10px}
+.m.sp .v{color:var(--blue)}
+.m.inc .v{color:var(--yellow)}
+.m.hr .v{color:var(--green)}
+.m.rpe .v{color:#dfe6e9}
+.seg-n{font-size:9px;color:var(--dim);margin-top:4px;font-style:italic}
+.seg.wu,.seg.cd{opacity:.55;padding:6px 10px}
+
+/* RULES */
+.rules{margin:8px 12px 0;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--border)}
+.rules h3{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px}
+.rl{display:flex;align-items:flex-start;gap:7px;margin-bottom:7px;font-size:11px;line-height:1.4}
+.rl:last-child{margin-bottom:0}
+.rd{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.rd.r{background:#e74c3c}.rd.y{background:#f1c40f}.rd.g{background:#2ecc71}.rd.b{background:var(--blue)}
+
+/* OFFLINE TIP */
+.offline-tip{margin:16px 12px 0;padding:12px 14px;border-radius:12px;background:rgba(108,92,231,0.08);border:1px solid rgba(108,92,231,0.2);font-size:11px;color:var(--accent2);line-height:1.5}
+.offline-tip strong{color:var(--accent);font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>🏃 Treadmill Plan</h1>
+  <div class="sub">Недели 1–8 • Zone 2 • Прогрессивная нагрузка</div>
+</div>
+
+<div class="week-scroll" id="weekScroll"></div>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+  <div class="progress-label"><span id="progLabel">Неделя 1 из 8</span><span id="progPct"></span></div>
+</div>
+
+<div class="hr-ceil">⚠️ Потолок: 135 уд/мин — снижай наклон или скорость</div>
+
+<div id="statsArea"></div>
+<div id="contentArea"></div>
+
+<div class="rules">
+  <h3>Whoop — авторегуляция</h3>
+  <div class="rl"><div class="rd r"></div><span>🔴 Красное восст. → пропусти или только День C (20 мин)</span></div>
+  <div class="rl"><div class="rd y"></div><span>🟡 Жёлтое → работай по плану, снижай если RPE выше нормы</span></div>
+  <div class="rl"><div class="rd g"></div><span>🟢 Зелёное → можно +5 мин или +1% наклона</span></div>
+  <div class="rl"><div class="rd b"></div><span>💤 Сон &lt; 80% → снизь объём на 20%, День B → параметры Дня A</span></div>
+</div>
+
+<div class="offline-tip">
+  <strong>📱 Оффлайн-доступ:</strong> Открой эту страницу в браузере → «Поделиться» → «На экран Домой». Работает без интернета после первой загрузки.
+</div>
+
+<div class="rules" style="margin-top:12px;border-color:rgba(108,92,231,0.2)">
+  <h3>🚀 Как прогрессировать после 8 недели</h3>
+  <div class="rl"><div class="rd g"></div><span><strong>Цикл 2 (нед 9–16):</strong> Повтори структуру нед 2–8, но подними базу: скорость +0.3 км/ч, наклон +1% к каждому сегменту</span></div>
+  <div class="rl"><div class="rd g"></div><span><strong>Объём:</strong> День B → до 60 мин максимум. День A и C — без изменений</span></div>
+  <div class="rl"><div class="rd g"></div><span><strong>Каждые 4 недели:</strong> вставляй разгрузочную неделю (как нед 7) — снижай объём на 20–30%</span></div>
+  <div class="rl"><div class="rd g"></div><span><strong>Когда HR адаптируется:</strong> если на скорости 6.0 + наклон 4% пульс < 120, пора поднимать параметры</span></div>
+  <div class="rl"><div class="rd y"></div><span><strong>Следующий уровень:</strong> через 2–3 цикла можно пробовать лёгкий бег (7.5–8.0 км/ч) короткими интервалами по 2–3 мин, если Whoop стабильно зелёный</span></div>
+  <div class="rl"><div class="rd r"></div><span><strong>Стоп-сигналы:</strong> боль в коленях/спине, 3+ красных восст. подряд, силовые падают → откатись на параметры предыдущего цикла</span></div>
+</div>
+
+<div style="text-align:center;padding:20px 0 10px;font-size:10px;color:#55556a">
+  Medet • Treadmill Plan • Zone 2 Progressive
+</div>
+
+<script>
+const P = {
+  1: {
+    a:{t:30,segs:[
+      {p:"Разминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"Очень лёгкий шаг, дыхание носом",w:1},
+      {p:"Основная часть",min:20,sp:"4.5–5.0",inc:"0–1%",hr:"110–120",rpe:"4–5",n:"Равномерный темп, найди свою зону"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"Плавное снижение темпа",w:2}
+    ]},
+    b:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0–1%",hr:"90–100",rpe:"",n:"Постепенный вход",w:1},
+      {p:"Zone 2 — блок 1",min:10,sp:"5.0–5.5",inc:"1–2%",hr:"115–125",rpe:"5–6",n:"Контроль дыхания, можно говорить"},
+      {p:"Zone 2 — блок 2",min:15,sp:"5.0–5.5",inc:"2–3%",hr:"115–125",rpe:"5–6",n:"Наклон ↑ если HR < 115"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"Мягкое снижение",w:2}
+    ]},
+    c:{t:25,segs:[
+      {p:"Разминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"Расслабленный шаг",w:1},
+      {p:"Ходьба лёгкая",min:15,sp:"4.5–5.0",inc:"0–1%",hr:"105–115",rpe:"3–4",n:"Лёгкий темп, восстановление"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"Дыхание, расслабление",w:2}
+    ]}
+  },
+  2: {
+    a:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0–1%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Основная часть",min:25,sp:"5.0–5.5",inc:"1%",hr:"110–120",rpe:"4–5",n:"Добавлено 5 мин объёма к неделе 1"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"",w:2}
+    ]},
+    b:{t:40,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:1},
+      {p:"Zone 2 — блок 1",min:15,sp:"5.5–6.0",inc:"2–3%",hr:"115–125",rpe:"5–6",n:"Стабильный ритм"},
+      {p:"Zone 2 — блок 2",min:15,sp:"5.5–6.2",inc:"3–4%",hr:"120–130",rpe:"6",n:"Наклон ↑ если RPE < 6"},
+      {p:"Заминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"95–105",rpe:"",n:"",w:2}
+    ]},
+    c:{t:30,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Ходьба лёгкая",min:20,sp:"4.5–5.0",inc:"0–1%",hr:"105–115",rpe:"3–4",n:"Добавлено 5 мин"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"",w:2}
+    ]}
+  },
+  3: {
+    a:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0–1%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Основная часть",min:25,sp:"5.0–5.5",inc:"1–2%",hr:"110–120",rpe:"4–5",n:"Лёгкий наклон для вариации"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"",w:2}
+    ]},
+    b:{t:45,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:1},
+      {p:"Zone 2 — блок 1",min:15,sp:"5.5–6.0",inc:"2–3%",hr:"120–130",rpe:"5–6",n:"Целевой HR зоны"},
+      {p:"Zone 2 — блок 2",min:15,sp:"5.5–6.2",inc:"3–4%",hr:"120–130",rpe:"6",n:"Поддерживай наклон"},
+      {p:"Zone 2 — блок 3",min:5,sp:"5.5–6.0",inc:"2–3%",hr:"120–130",rpe:"5–6",n:""},
+      {p:"Заминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"95–105",rpe:"",n:"",w:2}
+    ]},
+    c:{t:30,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"🔺 Наклон",min:2,sp:"4.5–5.0",inc:"2%",hr:"110–120",rpe:"4–5",n:""},
+      {p:"▬ Плоско",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–110",rpe:"3–4",n:""},
+      {p:"🔺 Наклон",min:2,sp:"4.5–5.0",inc:"2%",hr:"110–120",rpe:"4–5",n:""},
+      {p:"▬ Плоско",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–110",rpe:"3–4",n:""},
+      {p:"🔺 Наклон",min:2,sp:"4.5–5.0",inc:"2%",hr:"110–120",rpe:"4–5",n:""},
+      {p:"▬ Плоско",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–110",rpe:"3–4",n:""},
+      {p:"Ровная ходьба",min:6,sp:"4.5–5.0",inc:"0–1%",hr:"105–115",rpe:"3–4",n:""},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"",w:2}
+    ]}
+  },
+  4: {
+    a:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0–1%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Основная часть",min:25,sp:"5.0–5.5",inc:"1–2%",hr:"110–120",rpe:"4–5",n:"Консолидация — держим объём"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"",w:2}
+    ]},
+    b:{t:45,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:1},
+      {p:"Zone 2 — блок 1",min:15,sp:"5.5–6.0",inc:"3–4%",hr:"120–130",rpe:"5–6",n:"Стабильность"},
+      {p:"Zone 2 — блок 2",min:15,sp:"5.5–6.2",inc:"3–4%",hr:"120–130",rpe:"6",n:"Удерживай темп + наклон"},
+      {p:"Zone 2 — блок 3",min:5,sp:"5.5–6.0",inc:"2–3%",hr:"120–130",rpe:"5–6",n:""},
+      {p:"Заминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"95–105",rpe:"",n:"",w:2}
+    ]},
+    c:{t:30,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"🔺 Холм",min:3,sp:"4.5–5.0",inc:"2%",hr:"110–120",rpe:"4–5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–110",rpe:"3–4",n:""},
+      {p:"🔺 Холм",min:3,sp:"4.5–5.0",inc:"2%",hr:"110–120",rpe:"4–5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–110",rpe:"3–4",n:""},
+      {p:"🔺 Холм",min:3,sp:"4.5–5.0",inc:"2%",hr:"110–120",rpe:"4–5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–110",rpe:"3–4",n:""},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"",w:2}
+    ]}
+  },
+  5: {
+    a:{t:40,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Основная часть",min:30,sp:"5.2–5.8",inc:"1–2%",hr:"112–122",rpe:"4–5",n:"+5 мин. Скорость чуть выше"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"",w:2}
+    ]},
+    b:{t:50,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:1},
+      {p:"Zone 2 — блок 1",min:15,sp:"5.5–6.2",inc:"3–4%",hr:"120–130",rpe:"5–6",n:"Уверенный темп"},
+      {p:"Zone 2 — блок 2",min:15,sp:"5.8–6.3",inc:"4–5%",hr:"122–132",rpe:"6",n:"Наклон ↑ — новый стимул"},
+      {p:"Zone 2 — блок 3",min:10,sp:"5.5–6.0",inc:"3%",hr:"120–128",rpe:"5–6",n:"Поддержка темпа"},
+      {p:"Заминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"95–105",rpe:"",n:"",w:2}
+    ]},
+    c:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"🔺 Холм",min:3,sp:"5.0–5.3",inc:"3%",hr:"112–122",rpe:"4–5",n:"Наклон ↑ vs нед. 4"},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–112",rpe:"3–4",n:""},
+      {p:"🔺 Холм",min:3,sp:"5.0–5.3",inc:"3%",hr:"112–122",rpe:"4–5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–112",rpe:"3–4",n:""},
+      {p:"🔺 Холм",min:3,sp:"5.0–5.3",inc:"3%",hr:"112–122",rpe:"4–5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–112",rpe:"3–4",n:""},
+      {p:"Ровная ходьба",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"105–115",rpe:"3–4",n:""},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"",w:2}
+    ]}
+  },
+  6: {
+    a:{t:40,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Основная часть",min:30,sp:"5.2–5.8",inc:"2–3%",hr:"112–122",rpe:"4–5",n:"Наклон ↑ — адаптация"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"",w:2}
+    ]},
+    b:{t:50,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:1},
+      {p:"Zone 2 — блок 1",min:18,sp:"5.8–6.2",inc:"4–5%",hr:"122–132",rpe:"5–6",n:"Длинный блок"},
+      {p:"Zone 2 — блок 2",min:17,sp:"5.8–6.3",inc:"4–5%",hr:"122–132",rpe:"6",n:"Держи пульс < 135!"},
+      {p:"Заминка",min:5,sp:"4.0–4.5",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:2},
+      {p:"Растяжка",min:5,sp:"—",inc:"—",hr:"< 90",rpe:"1",n:"Стоя на дорожке",w:2}
+    ]},
+    c:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"🔺 Холм",min:3,sp:"5.0–5.5",inc:"3–4%",hr:"112–125",rpe:"5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0%",hr:"105–112",rpe:"3",n:""},
+      {p:"🔺 Холм",min:3,sp:"5.0–5.5",inc:"3–4%",hr:"112–125",rpe:"5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0%",hr:"105–112",rpe:"3",n:""},
+      {p:"🔺 Холм",min:3,sp:"5.0–5.5",inc:"3–4%",hr:"112–125",rpe:"5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0%",hr:"105–112",rpe:"3",n:""},
+      {p:"Ровная ходьба",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"105–115",rpe:"3–4",n:""},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"",w:2}
+    ]}
+  },
+  7: {
+    a:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Основная часть",min:25,sp:"5.0–5.5",inc:"1–2%",hr:"108–118",rpe:"3–4",n:"⚡ Разгрузочная неделя — снижаем объём"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"",w:2}
+    ]},
+    b:{t:40,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:1},
+      {p:"Zone 2 — блок 1",min:15,sp:"5.5–6.0",inc:"3–4%",hr:"118–128",rpe:"5",n:"Комфортный темп"},
+      {p:"Zone 2 — блок 2",min:10,sp:"5.5–6.0",inc:"2–3%",hr:"115–125",rpe:"5",n:"Чуть легче обычного"},
+      {p:"Заминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"95–105",rpe:"",n:"",w:2},
+      {p:"Растяжка",min:5,sp:"—",inc:"—",hr:"< 90",rpe:"1",n:"Восстановление",w:2}
+    ]},
+    c:{t:25,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Ходьба лёгкая",min:15,sp:"4.5–5.0",inc:"0–1%",hr:"100–112",rpe:"3",n:"Просто двигайся легко"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"",w:2}
+    ]}
+  },
+  8: {
+    a:{t:40,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"Основная часть",min:30,sp:"5.3–5.8",inc:"2–3%",hr:"112–122",rpe:"4–5",n:"Свежий после разгрузки"},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"90–100",rpe:"",n:"",w:2}
+    ]},
+    b:{t:55,segs:[
+      {p:"Разминка",min:5,sp:"4.5–5.0",inc:"0–1%",hr:"95–105",rpe:"",n:"",w:1},
+      {p:"Zone 2 — блок 1",min:18,sp:"5.8–6.3",inc:"4–5%",hr:"122–132",rpe:"5–6",n:"Пиковый объём"},
+      {p:"Zone 2 — блок 2",min:17,sp:"5.8–6.3",inc:"4–5%",hr:"122–132",rpe:"6",n:"Финальный толчок"},
+      {p:"Zone 2 — блок 3",min:5,sp:"5.5–6.0",inc:"3%",hr:"118–128",rpe:"5",n:"Мягкий финиш"},
+      {p:"Заминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"95–105",rpe:"",n:"",w:2},
+      {p:"Растяжка",min:5,sp:"—",inc:"—",hr:"< 90",rpe:"1",n:"🎉 Ты молодец!",w:2}
+    ]},
+    c:{t:35,segs:[
+      {p:"Разминка",min:5,sp:"4.0–4.5",inc:"0%",hr:"90–100",rpe:"",n:"",w:1},
+      {p:"🔺 Холм",min:4,sp:"5.0–5.5",inc:"3–4%",hr:"115–125",rpe:"5",n:"Длинные холмы"},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0%",hr:"105–112",rpe:"3",n:""},
+      {p:"🔺 Холм",min:4,sp:"5.0–5.5",inc:"3–4%",hr:"115–125",rpe:"5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0%",hr:"105–112",rpe:"3",n:""},
+      {p:"🔺 Холм",min:4,sp:"5.0–5.5",inc:"3–4%",hr:"115–125",rpe:"5",n:""},
+      {p:"▬ Отдых",min:2,sp:"4.5–5.0",inc:"0%",hr:"105–112",rpe:"3",n:""},
+      {p:"Ровная ходьба",min:2,sp:"4.5–5.0",inc:"0–1%",hr:"105–115",rpe:"3",n:""},
+      {p:"Заминка",min:5,sp:"3.5–4.0",inc:"0%",hr:"85–95",rpe:"",n:"",w:2}
+    ]}
+  }
+};
+
+const dayMeta = {
+  a:{name:"Восстановление",sub:"После дня ног",cls:"day-a"},
+  b:{name:"Zone 2 ходьба",sub:"Жиросжигание",cls:"day-b"},
+  c:{name:"Метаболическая",sub:"Перемен. наклон",cls:"day-c"}
+};
+
+const weeks = [1,2,3,4,5,6,7,8];
+let cur = 1;
+
+function totals(w){
+  const d=P[w];
+  return {a:d.a.t, b:d.b.t, c:d.c.t, sum:d.a.t+d.b.t+d.c.t};
+}
+
+function renderTabs(){
+  const el=document.getElementById('weekScroll');
+  el.innerHTML=weeks.map(w=>`<div class="week-btn${w===cur?' active':''}" onclick="go(${w})">${w===1?'🟢 Нед 1':w===7?'⚡ Нед 7':'Нед '+w}</div>`).join('');
+}
+
+function renderProgress(){
+  const idx=weeks.indexOf(cur);
+  const pct=Math.round(((idx+1)/weeks.length)*100);
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progLabel').textContent=`Неделя ${cur} из 8`;
+  document.getElementById('progPct').textContent=pct+'%';
+}
+
+function renderStats(){
+  const t=totals(cur);
+  const prev=cur>1?totals(cur-1):null;
+  const delta=(k)=>{
+    if(!prev)return'<span class="stat-delta same">базовая</span>';
+    const d=t[k]-prev[k];
+    if(d>0)return`<span class="stat-delta up">+${d} мин</span>`;
+    if(d<0)return`<span class="stat-delta up" style="color:var(--yellow)">${d} мин</span>`;
+    return'<span class="stat-delta same">= </span>';
+  };
+  document.getElementById('statsArea').innerHTML=`
+    <div class="week-stats">
+      <div class="stat-card"><div class="stat-val" style="color:var(--a)">${t.a}</div><div class="stat-label">День A (мин)</div>${delta('a')}</div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--b)">${t.b}</div><div class="stat-label">День B (мин)</div>${delta('b')}</div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--c)">${t.c}</div><div class="stat-label">День C (мин)</div>${delta('c')}</div>
+    </div>`;
+}
+
+function segHTML(s){
+  const cls=s.w===1?'wu':s.w===2?'cd':'';
+  let metrics=`<div class="m sp"><span class="l">Скор.</span><span class="v">${s.sp}</span></div>`;
+  if(s.inc!=='—')metrics+=`<div class="m inc"><span class="l">Накл.</span><span class="v">${s.inc}</span></div>`;
+  metrics+=`<div class="m hr"><span class="l">HR</span><span class="v">${s.hr}</span></div>`;
+  if(s.rpe)metrics+=`<div class="m rpe"><span class="l">RPE</span><span class="v">${s.rpe}</span></div>`;
+  return`<div class="seg ${cls}"><div class="seg-top"><span class="seg-ph">${s.p}</span><span class="seg-tm">${s.min} мин</span></div><div class="seg-m">${metrics}</div>${s.n?`<div class="seg-n">${s.n}</div>`:''}</div>`;
+}
+
+function renderContent(){
+  const w=P[cur];
+  let html='';
+  ['a','b','c'].forEach((k,i)=>{
+    const d=w[k]; const m=dayMeta[k];
+    html+=`<div class="day-card ${m.cls}${i===0?' open':''}">
+      <div class="day-head" onclick="toggle(this)">
+        <div class="day-icon">${k.toUpperCase()}</div>
+        <div class="day-info"><div class="day-title">${m.name}</div><div class="day-sub">${m.sub}</div></div>
+        <div class="day-total">${d.t} мин</div>
+        <div class="chev">▼</div>
+      </div>
+      <div class="day-body">${d.segs.map(segHTML).join('')}</div>
+    </div>`;
+  });
+  document.getElementById('contentArea').innerHTML=`<div class="week-panel active" style="padding:0 12px">${html}</div>`;
+}
+
+function go(w){cur=w;renderTabs();renderProgress();renderStats();renderContent();
+  document.querySelector('.week-btn.active')?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+function toggle(el){el.closest('.day-card').classList.toggle('open')}
+
+go(1);
+</script>
+</body>
+</html>

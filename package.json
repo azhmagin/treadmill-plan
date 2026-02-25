@@ -1,0 +1,12 @@
+{
+    "name": "treadmill-plan",
+    "version": "1.0.0",
+    "description": "Treadmill Plan — Weeks 1-8 Zone 2 Progressive",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2"
+    }
+}
